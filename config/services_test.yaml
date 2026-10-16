@@ -7,3 +7,19 @@ services:
 
   Symfony\Contracts\HttpClient\HttpClientInterface:
     class: Symfony\Component\HttpClient\MockHttpClient
+
+  # Surcharge de test uniquement : fournit un parser à HtmlSanitizer pour que la
+  # suite de tests puisse tourner avec un PHP 8.4 dépourvu de Dom\HTMLDocument
+  # (ext-dom compilée sans le support HTML5 de libxml2 >= 2.16). La classe
+  # App\Tests\HtmlSanitizer\TestHtmlSanitizerParser délègue au NativeParser
+  # natif dès que Dom\HTMLDocument existe : aucun impact quand l'extension est
+  # disponible (CI, conteneurs Docker).
+  App\Tests\HtmlSanitizer\TestHtmlSanitizerParser: ~
+
+  html_sanitizer.sanitizer.app.message_sanitizer:
+    class: Symfony\Component\HtmlSanitizer\HtmlSanitizer
+    arguments:
+      - '@html_sanitizer.config.app.message_sanitizer'
+      - '@App\Tests\HtmlSanitizer\TestHtmlSanitizerParser'
+    tags:
+      - { name: html_sanitizer, sanitizer: 'app.message_sanitizer' }
